@@ -1,6 +1,4 @@
-
 -- Guild Press
--- Member 1: Database Design and Integrity
 -- Stage 1: Core types and tables
 
 CREATE TYPE design_status AS ENUM (
@@ -66,3 +64,47 @@ CREATE TABLE designer_payouts (
     status payout_status NOT NULL DEFAULT 'pending',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+
+ALTER TABLE designs
+    ADD CONSTRAINT designs_price_nonnegative
+    CHECK (price >= 0);
+
+ALTER TABLE designs
+    ADD CONSTRAINT designs_title_not_blank
+    CHECK (LENGTH(TRIM(title)) > 0);
+
+ALTER TABLE sales
+    ADD CONSTRAINT sales_quantity_positive
+    CHECK (quantity > 0);
+
+ALTER TABLE sales
+    ADD CONSTRAINT sales_unit_price_nonnegative
+    CHECK (unit_price >= 0);
+
+ALTER TABLE designer_payouts
+    ADD CONSTRAINT payouts_amount_nonnegative
+    CHECK (amount >= 0);
+
+ALTER TABLE designs
+    ADD CONSTRAINT designs_content_present
+    CHECK (
+        description IS NOT NULL
+        AND LENGTH(TRIM(description)) > 0
+    );
+
+
+CREATE OR REPLACE FUNCTION set_print_job_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_print_job_updated_at
+BEFORE UPDATE ON print_jobs
+FOR EACH ROW
+EXECUTE FUNCTION set_print_job_updated_at();
