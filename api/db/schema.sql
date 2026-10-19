@@ -1,6 +1,3 @@
--- Guild Press
--- Stage 1: Core types and tables
-
 CREATE TYPE design_status AS ENUM (
     'draft',
     'pending_review',
