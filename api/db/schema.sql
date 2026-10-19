@@ -105,3 +105,40 @@ CREATE TRIGGER trg_print_job_updated_at
 BEFORE UPDATE ON print_jobs
 FOR EACH ROW
 EXECUTE FUNCTION set_print_job_updated_at();
+
+
+CREATE OR REPLACE FUNCTION enforce_print_job_transition()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.status = OLD.status THEN
+        RETURN NEW;
+    END IF;
+
+    IF OLD.status = 'pending'
+       AND NEW.status IN ('printing', 'cancelled') THEN
+        RETURN NEW;
+    END IF;
+
+    IF OLD.status = 'printing'
+       AND NEW.status IN ('completed', 'failed', 'cancelled') THEN
+        RETURN NEW;
+    END IF;
+
+    IF OLD.status = 'failed'
+       AND NEW.status IN ('pending', 'cancelled') THEN
+        RETURN NEW;
+    END IF;
+
+    RAISE EXCEPTION
+        'Invalid print job status transition: % -> %',
+        OLD.status, NEW.status;
+END;
+$$;
+
+CREATE TRIGGER trg_print_job_status_transition
+BEFORE UPDATE OF status ON print_jobs
+FOR EACH ROW
+EXECUTE FUNCTION enforce_print_job_transition();
+
