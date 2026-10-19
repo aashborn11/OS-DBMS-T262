@@ -364,4 +364,96 @@ void simulateWorkerCrash(sqlite3* db) {
     }
     sqlite3_finalize(statement);
 }
+void listRecords(sqlite3* db) {
+    const char* sql =
+        "SELECT orders.id, orders.customer_name, orders.amount, "
+        "payouts.amount, print_jobs.status FROM orders "
+        "JOIN payouts ON payouts.order_id=orders.id "
+        "JOIN print_jobs ON print_jobs.order_id=orders.id ORDER BY orders.id;";
+    sqlite3_stmt* statement = nullptr;
+    if (sqlite3_prepare_v2(db, sql, -1, &statement, nullptr) != SQLITE_OK) {
+        cout << "Could not read sale records.\n";
+        return;
+    }
+    cout << "\nOrder | Customer | Sale | Payout | Print job\n";
+    while (sqlite3_step(statement) == SQLITE_ROW) {
+        cout << sqlite3_column_int(statement, 0) << " | "
+             << sqlite3_column_text(statement, 1) << " | Rs. "
+             << sqlite3_column_double(statement, 2) << " | Rs. "
+             << sqlite3_column_double(statement, 3) << " | "
+             << sqlite3_column_text(statement, 4) << "\n";
+    }
+    sqlite3_finalize(statement);
+}
+
+int main() {
+    sqlite3* db = nullptr;
+    if (sqlite3_open("guild_press.db", &db) != SQLITE_OK) {
+        cout << "Could not open the database.\n";
+        sqlite3_close(db);
+        return 1;
+    }
+    sqlite3_busy_timeout(db, 5000);
+
+    if (!loadSchema(db)) {
+        sqlite3_close(db);
+        return 1;
+    }
+    addSampleData(db);
+
+    bool running = true;
+    while (running) {
+        cout << "\nGuild Press\n"
+             << "1. Record a sale\n"
+             << "2. Process next print job\n"
+             << "3. Simulate a worker crash\n"
+             << "4. Recover expired jobs\n"
+             << "5. Show sales\n"
+             << "6. Submit a design\n"
+             << "7. Review a design\n"
+             << "8. Show review history\n"
+             << "0. Exit\n"
+             << "Choice: ";
+        string choice;
+        getline(cin, choice);
+
+        if (choice == "1") {
+            long long designId = 0;
+            if (!chooseApprovedDesign(db, designId)) continue;
+            string customer;
+            string failChoice;
+            cout << "Customer name: ";
+            getline(cin, customer);
+            if (customer.empty()) customer = "Guest";
+            cout << "Force print-job failure to show rollback? (y/n): ";
+            getline(cin, failChoice);
+            recordSale(db, designId, customer, failChoice == "y" || failChoice == "Y");
+        } else if (choice == "2") {
+            processNextJob(db);
+        } else if (choice == "3") {
+            simulateWorkerCrash(db);
+        } else if (choice == "4") {
+            recoverExpiredJobs(db);
+        } else if (choice == "5") {
+            listRecords(db);
+        } else if (choice == "6") {
+            string title;
+            cout << "Design title: ";
+            getline(cin, title);
+            if (title.empty()) cout << "Design title cannot be empty.\n";
+            else submitDesign(db, title);
+        } else if (choice == "7") {
+            reviewPendingDesign(db);
+        } else if (choice == "8") {
+            showReviewHistory(db);
+        } else if (choice == "0") {
+            running = false;
+        } else {
+            cout << "Choose one of the listed options.\n";
+        }
+    }
+
+    sqlite3_close(db);
+    return 0;
+}
 
