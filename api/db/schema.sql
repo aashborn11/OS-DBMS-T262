@@ -142,3 +142,47 @@ BEFORE UPDATE OF status ON print_jobs
 FOR EACH ROW
 EXECUTE FUNCTION enforce_print_job_transition();
 
+
+CREATE INDEX IF NOT EXISTS idx_designs_designer_id
+ON designs(designer_id);
+
+CREATE INDEX IF NOT EXISTS idx_designs_status
+ON designs(status);
+
+CREATE INDEX IF NOT EXISTS idx_print_jobs_design_id
+ON print_jobs(design_id);
+
+CREATE INDEX IF NOT EXISTS idx_print_jobs_status
+ON print_jobs(status);
+
+CREATE INDEX IF NOT EXISTS idx_sales_design_id
+ON sales(design_id);
+
+CREATE INDEX IF NOT EXISTS idx_designer_payouts_designer_id
+ON designer_payouts(designer_id);
+
+CREATE OR REPLACE VIEW designer_stats AS
+SELECT
+    d.designer_id,
+    d.name,
+    COUNT(DISTINCT ds.design_id) AS total_designs,
+    COUNT(DISTINCT CASE
+        WHEN ds.status = 'approved' THEN ds.design_id
+    END) AS approved_designs,
+    COUNT(DISTINCT pj.job_id) AS total_print_jobs,
+    COUNT(DISTINCT CASE
+        WHEN pj.status = 'completed' THEN pj.job_id
+    END) AS completed_print_jobs,
+    COUNT(DISTINCT s.sale_id) AS total_sales,
+    COALESCE(SUM(s.quantity * s.unit_price), 0) AS total_sales_amount,
+    COALESCE(SUM(dp.amount), 0) AS total_payouts
+FROM designers d
+LEFT JOIN designs ds
+    ON d.designer_id = ds.designer_id
+LEFT JOIN print_jobs pj
+    ON ds.design_id = pj.design_id
+LEFT JOIN sales s
+    ON ds.design_id = s.design_id
+LEFT JOIN designer_payouts dp
+    ON d.designer_id = dp.designer_id
+GROUP BY d.designer_id, d.name;
