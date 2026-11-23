@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Guild Press Admin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230071e3'/%3E%3Cpath d='M11 7l-5 3-2 6 4 1 1-2v10h12V15l1 2 4-1-2-6-5-3c-1 3-7 3-8 0z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/base.css">
+<style>
+  body { background: var(--bg2); }
+  .shell { display: grid; grid-template-columns: 252px 1fr; min-height: 100dvh; }
+
+  /* Sidebar: a heavier, structural material */
+  .side { position: sticky; top: 0; height: 100dvh; padding: 22px 14px; display: flex; flex-direction: column; gap: 22px;
+    background: var(--glass); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border-right: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: .6rem; padding: 0 10px; font: 700 1.0625rem var(--font-display); letter-spacing: -.02em; }
+  .brand svg { width: 28px; height: 28px; }
+  .brand small { display: block; font: 500 .75rem var(--font); color: var(--ink2); letter-spacing: 0; }
+  .nav { display: grid; gap: 2px; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: .62rem .75rem; border-radius: 10px; color: var(--ink); font-size: .9688rem;
+    transition: background-color .2s var(--ease); }
+  .nav a svg { width: 19px; height: 19px; flex: none; stroke: var(--ink2); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .nav a:hover { text-decoration: none; background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .nav a[aria-current] { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); font-weight: 600; }
+  .nav a[aria-current] svg { stroke: var(--accent); }
+  .nav .badge { margin-left: auto; background: var(--accent); color: #fff; font-size: .75rem; font-weight: 600; min-width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; padding: 0 6px; }
+  .side .foot { margin-top: auto; display: grid; gap: 4px; }
+  .side .foot a, .side .foot button { all: unset; box-sizing: border-box; cursor: pointer; padding: .55rem .75rem; border-radius: 10px; color: var(--ink2); font-size: .9063rem; }
+  .side .foot a:hover, .side .foot button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); text-decoration: none; }
+  .side .foot :focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .content { padding: clamp(24px, 4vw, 48px); max-width: 1040px; width: 100%; }
+  .page-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  .page-head h1 { font-size: clamp(1.9rem, 4vw, 2.5rem); letter-spacing: -.03em; line-height: 1.1; }
+  .page-head p { color: var(--ink2); margin-top: 6px; }
+
+  .panel { background: var(--card); border-radius: 22px; border: 1px solid var(--line); box-shadow: var(--shadow-s); margin-bottom: 22px; overflow: hidden; }
+  .panel > .ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 18px 22px; }
+  .panel > .ph h2 { font-size: 1.1875rem; letter-spacing: -.018em; }
+  .panel > .ph + .tbl, .panel > .ph + .scroll { border-top: 1px solid var(--line); }
+  .pad { padding: 22px; }
+  .pad.t0 { padding-top: 0; }
+  .row { display: flex; gap: 14px; align-items: end; flex-wrap: wrap; }
+  .row .grow { flex: 1; min-width: 180px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+  .tile { all: unset; box-sizing: border-box; display: block; background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 20px 22px;
+    box-shadow: var(--shadow-s); cursor: pointer; transition: transform .45s var(--ease); }
+  .tile:hover { transform: translateY(-2px); }
+  .tile:active { transform: scale(.98); transition-duration: .1s; }
+  .tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .tile .l { font-size: .8125rem; color: var(--ink2); font-weight: 500; }
+  .tile .n { font: 700 2.125rem/1.1 var(--font-display); letter-spacing: -.035em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 13px 22px; vertical-align: middle; }
+  td { border-top: 1px solid var(--line); }
+  th { font-size: .75rem; font-weight: 600; color: var(--ink2); padding-bottom: 8px; letter-spacing: 0; white-space: nowrap; }
+  tbody tr:first-child td { border-top: 0; }
+  .ph + .scroll td { }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.muted { color: var(--ink2); }
+  tbody tr { transition: background-color .2s; }
+  tbody tr:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+  .who { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .mini { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .mini svg { width: 32px; }
+  .t-strong { font-weight: 600; }
+  .empty { padding: 44px 22px; text-align: center; color: var(--ink2); }
+  .empty strong { display: block; color: var(--ink); font-size: 1.0625rem; margin-bottom: 4px; }
+
+  .seg { display: inline-flex; background: color-mix(in srgb, var(--ink) 7%, transparent); border-radius: 11px; padding: 3px; gap: 2px; }
+  .seg button { all: unset; box-sizing: border-box; cursor: pointer; padding: .38rem .95rem; border-radius: 8px; font-size: .875rem; font-weight: 500; color: var(--ink2);
+    transition: background-color .25s var(--ease), color .2s; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .picker { display: flex; align-items: center; gap: 10px; font-size: .875rem; color: var(--ink2); }
+  .picker select { width: auto; min-height: 36px; padding-top: .35rem; padding-bottom: .35rem; }
+
+  .switch { display: flex; align-items: center; gap: 12px; font-size: .9063rem; color: var(--ink2); min-height: 44px; cursor: pointer; }
+  .switch input { appearance: none; width: 51px; height: 31px; border-radius: 16px; background: color-mix(in srgb, var(--ink) 20%, transparent); position: relative; flex: none; cursor: pointer; transition: background-color .3s var(--ease); margin: 0; border: 0; padding: 0; min-height: 0; }
+  .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.3); transition: transform .35s var(--ease); }
+  .switch input:checked { background: #34c759; }
+  .switch input:checked::after { transform: translateX(20px); }
+  .switch input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; box-shadow: none; }
+
+  .review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; padding: 0 22px 22px; }
+  .rcard { border: 1px solid var(--line); border-radius: 20px; padding: 16px; display: grid; gap: 12px; background: var(--bg2); }
+  .rcard .who .mini { width: 56px; height: 56px; border-radius: 14px; } .rcard .who .mini svg { width: 44px; }
+  .rcard .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rcard textarea { min-height: 64px; background: var(--card); }
+
+  .attn { display: grid; }
+  .attn > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 22px; border-top: 1px solid var(--line); }
+  .attn > div:first-child { border-top: 0; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--ink2); }
+  .dot.warn { background: #ff9f0a; } .dot.ok { background: #34c759; } .dot.bad { background: #ff453a; }
+  .attn .what { display: flex; align-items: center; gap: 12px; }
+
+  .people { list-style: none; margin: 0; padding: 0; }
+  .people li { display: flex; align-items: center; gap: 14px; padding: 12px 22px; border-top: 1px solid var(--line); }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .9375rem; flex: none; }
+  .people .id { margin-left: auto; color: var(--ink2); font-size: .8125rem; font-variant-numeric: tabular-nums; }
+  .add { display: flex; gap: 10px; padding: 16px 22px; border-top: 1px solid var(--line); background: var(--bg2); }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  .split .panel { margin-bottom: 0; }
+
+  /* Login */
+  .login { min-height: 100dvh; display: grid; place-items: center; padding: 24px; }
+  .login-card { width: min(400px, 100%); background: var(--card); border: 1px solid var(--line); border-radius: 28px; padding: 36px 32px; box-shadow: var(--shadow-m); text-align: center; }
+  .login-card .lock { width: 64px; height: 64px; border-radius: 18px; background: var(--accent); display: grid; place-items: center; margin: 0 auto 22px; }
+  .login-card .lock svg { width: 30px; stroke: #fff; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .login-card h1 { font-size: 1.75rem; letter-spacing: -.025em; }
+  .login-card p { color: var(--ink2); margin: 8px 0 24px; font-size: .9375rem; }
+  .login-card form { display: grid; gap: 14px; text-align: left; }
+  .login-card .err { color: var(--bad); font-size: .875rem; text-align: center; }
+  .login-card .hint { margin: 22px 0 0; font-size: .8125rem; }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 20%,60% { transform: translateX(-8px); } 40%,80% { transform: translateX(8px); } }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .side { position: sticky; z-index: 20; height: auto; flex-direction: row; align-items: center; padding: 10px 14px; gap: 10px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+    .side { scrollbar-width: none; } .side::-webkit-scrollbar { display: none; }
+    .brand small, .side .foot a.viewstore { display: none; }
+    .brand { flex: none; }
+    .nav { grid-auto-flow: column; }
+    .nav a { padding: .6rem .8rem; white-space: nowrap; min-height: 44px; }
+    .nav a svg { display: none; }
+    .side .foot { margin: 0 0 0 auto; grid-auto-flow: column; }
+    .side .foot button { min-height: 44px; display: flex; align-items: center; white-space: nowrap; }
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .split { grid-template-columns: 1fr; }
+    th, td { padding: 12px 14px; }
+    .panel > .ph, .pad, .people li, .add, .attn > div { padding-left: 16px; padding-right: 16px; }
+    .review-grid { padding: 0 16px 16px; }
+    .btn.sm { min-height: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login" hidden>
+  <div class="login-card" id="loginCard">
+    <div class="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2.5"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div>
+    <h1>Admin sign in</h1>
+    <p>Guild Press team only.</p>
+    <form id="loginForm">
+      <label class="field">Password<input type="password" name="password" autocomplete="current-password" autofocus required></label>
+      <p class="err" id="loginErr" role="alert" hidden></p>
+      <button class="btn primary lg" id="loginBtn">Sign in</button>
+    </form>
+    <p class="hint">The password is shown in the terminal where the server is running.</p>
+    <p class="hint" style="margin-top:6px"><a href="/">Back to the store</a></p>
+  </div>
+</div>
+
+<div id="appView" class="shell" hidden>
+  <aside class="side">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M11 7l-5 3-2 6 4 1 1-2v10h12V15l1 2 4-1-2-6-5-3c-1 3-7 3-8 0z" fill="#fff"/></svg>
+      <div>Guild Press<small>Admin</small></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Admin"></nav>
+    <div class="foot">
+      <a class="viewstore" href="/" target="_blank" rel="noopener">View store</a>
+      <button id="logout" type="button">Sign out</button>
+    </div>
+  </aside>
+  <main class="content" id="content"></main>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/static/shared.js"></script>
+<script>
+const {esc, api, toast, money, fmtTime, tee, tint} = GP;
+const $ = (s, r = document) => r.querySelector(s);
+let state = null, tabFilter = {designs: 'all', print: 'open'}, reviewerId = '', designerSel = '';
+
+const I = {
+  overview: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="13.5" y="12" width="7.5" height="9" rx="2"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="2"/></svg>',
+  designs: '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
+  review: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16 9.5"/></svg>',
+  orders: '<svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 01-8 0"/></svg>',
+  print: '<svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>',
+  people: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8"/></svg>',
+};
+const TABS = [['overview', 'Overview'], ['designs', 'Designs'], ['review', 'Review'], ['orders', 'Orders'], ['print', 'Print floor'], ['people', 'People']];
+const AV = ['#e8553d', '#3b82f6', '#1f9d74', '#8b5cf6', '#c9831a', '#ec7fa0'];
+
+const pill = s => `<span class="pill ${esc(s)}">${esc(s)}</span>`;
+const mini = d => `<span class="mini" style="background:${tint(d.title, d.id)}">${tee(d.title, d.id)}</span>`;
+const options = (list, sel) => list.map(p => `<option value="${p.id}" ${String(p.id) === String(sel) ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+const table = (heads, body, empty) => body.length
+  ? `<div class="scroll"><table><thead><tr>${heads.map(h => `<th class="${h[1] || ''}">${h[0]}</th>`).join('')}</tr></thead><tbody>${body.join('')}</tbody></table></div>`
+  : `<div class="empty">${empty}</div>`;
+const seg = (key, items) => `<div class="seg" role="group">${items.map(([v, l]) => `<button type="button" data-seg="${key}" data-v="${v}" aria-pressed="${tabFilter[key] === v}">${l}</button>`).join('')}</div>`;
+const route = () => { const r = location.hash.replace(/^#\/?/, ''); return TABS.some(t => t[0] === r) ? r : 'overview'; };
+const expired = j => j.status === 'claimed' && j.lease_until <= nowEst();
+const nowEst = () => state.now + Math.floor((Date.now() - state.fetched) / 1000);
+
+/* ---------- pages ---------- */
+function pageOverview() {
+  const s = state, pending = s.designs.filter(d => d.status === 'pending');
+  const open = s.jobs.filter(j => j.status !== 'completed'), exp = s.jobs.filter(expired);
+  const queued = s.jobs.filter(j => j.status === 'queued').length;
+  const tile = (label, n, to) => `<button class="tile" data-go="${to}"><div class="l">${label}</div><div class="n">${n}</div></button>`;
+  const attn = [];
+  if (pending.length) attn.push(`<div><div class="what"><span class="dot warn"></span><span><strong>${pending.length}</strong> design${pending.length > 1 ? 's' : ''} waiting for review</span></div><button class="btn sm primary" data-go="review">Review</button></div>`);
+  if (exp.length) attn.push(`<div><div class="what"><span class="dot bad"></span><span><strong>${exp.length}</strong> print job${exp.length > 1 ? 's' : ''} with an expired lease</span></div><button class="btn sm danger" data-act="recover">Recover</button></div>`);
+  if (queued) attn.push(`<div><div class="what"><span class="dot"></span><span><strong>${queued}</strong> job${queued > 1 ? 's' : ''} in the print queue</span></div><button class="btn sm" data-go="print">Open print floor</button></div>`);
+  return `<div class="page-head"><div><h1>Overview</h1><p>What needs your attention right now.</p></div></div>
+    <div class="tiles">
+      ${tile('Awaiting review', pending.length, 'review')}
+      ${tile('Open print jobs', open.length, 'print')}
+      ${tile('Orders', s.orders.length, 'orders')}
+      ${tile('Revenue', money(s.orders.reduce((a, o) => a + o.sale, 0)), 'orders')}
+    </div>
+    <div class="panel"><div class="ph"><h2>Needs attention</h2></div>
+      <div class="attn">${attn.length ? attn.join('') : '<div><div class="what"><span class="dot ok"></span><span>Everything is up to date.</span></div></div>'}</div></div>
+    <div class="panel"><div class="ph"><h2>Recent orders</h2><button class="btn sm" data-go="orders">All orders</button></div>
+      ${table([['Order'], ['Design'], ['Customer'], ['Sale', 'num'], ['Print']], s.orders.slice(0, 5).map(o => `<tr>
+        <td class="muted">#${o.id}</td><td class="t-strong">${esc(o.title)}</td><td>${esc(o.customer)}</td><td class="num">${money(o.sale)}</td><td>${pill(o.job_status)}</td></tr>`), '<strong>No orders yet</strong>Orders appear here as customers buy.')}
+    </div>`;
+}
+
+function pageDesigns() {
+  const s = state, f = tabFilter.designs, count = k => s.designs.filter(d => k === 'all' || d.status === k).length;
+  const list = s.designs.filter(d => f === 'all' || d.status === f);
+  if (!designerSel && s.designers[0]) designerSel = s.designers[0].id;
+  return `<div class="page-head"><div><h1>Designs</h1><p>Submit designs on behalf of designers and follow their status.</p></div></div>
+    <div class="panel"><div class="ph"><h2>New design</h2></div><div class="pad t0">
+      <form class="row" id="designForm">
+        <label class="field">Designer<select name="designer_id">${options(s.designers, designerSel)}</select></label>
+        <label class="field grow">Title<input type="text" name="title" placeholder="e.g. Campus Cat" maxlength="60" autocomplete="off"></label>
+        <button class="btn primary">Submit for review</button>
+      </form></div></div>
+    <div class="panel"><div class="ph"><h2>All designs</h2>
+      ${seg('designs', [['all', `All ${count('all')}`], ['pending', `Pending ${count('pending')}`], ['approved', `Approved ${count('approved')}`], ['rejected', `Rejected ${count('rejected')}`]])}</div>
+      ${table([['Design'], ['Designer'], ['Status']], list.map(d => `<tr><td><div class="who">${mini(d)}<span class="t-strong">${esc(d.title)}</span></div></td><td class="muted">${esc(d.designer)}</td><td>${pill(d.status)}</td></tr>`), '<strong>Nothing here</strong>No designs match this filter.')}
+    </div>`;
+}
+
+function pageReview() {
+  const s = state, pending = s.designs.filter(d => d.status === 'pending');
+  if (!reviewerId && s.reviewers[0]) reviewerId = s.reviewers[0].id;
+  return `<div class="page-head"><div><h1>Review</h1><p>Approve or send back submitted designs. Each decision is saved with a note.</p></div>
+      <div class="picker">Reviewing as <select id="reviewerSelect" aria-label="Reviewer">${options(s.reviewers, reviewerId)}</select></div></div>
+    <div class="panel"><div class="ph"><h2>Waiting for review (${pending.length})</h2></div>
+      ${pending.length ? `<div class="review-grid">${pending.map(d => `<div class="rcard">
+        <div class="who">${mini(d)}<div><div class="t-strong">${esc(d.title)}</div><div class="muted t-small">by ${esc(d.designer)}</div></div></div>
+        <textarea data-k="note-${d.id}" placeholder="Add a note (optional)" aria-label="Note for ${esc(d.title)}" maxlength="300"></textarea>
+        <div class="acts"><button class="btn ok" data-review="approved" data-id="${d.id}">Approve</button><button class="btn danger" data-review="rejected" data-id="${d.id}">Reject</button></div>
+      </div>`).join('')}</div>` : '<div class="empty"><strong>All caught up</strong>No designs are waiting for review.</div>'}
+    </div>
+    <div class="panel"><div class="ph"><h2>History</h2></div>
+      ${table([['Design'], ['Reviewer'], ['Decision'], ['Note'], ['When']], s.reviews.map(r => `<tr><td class="t-strong">${esc(r.title)}</td><td class="muted">${esc(r.reviewer)}</td><td>${pill(r.decision)}</td><td>${esc(r.note)}</td><td class="muted" style="white-space:nowrap">${fmtTime(r.reviewed_at)}</td></tr>`), '<strong>No reviews yet</strong>')}
+    </div>`;
+}
+
+function pageOrders() {
+  const s = state, approved = s.designs.filter(d => d.status === 'approved');
+  return `<div class="page-head"><div><h1>Orders</h1><p>Every sale, its designer payout and print status.</p></div></div>
+    <div class="panel"><div class="ph"><h2>Record a sale</h2></div><div class="pad t0">
+      <form class="row" id="saleForm">
+        <label class="field grow">Approved design<select name="design_id">${approved.length ? approved.map(d => `<option value="${d.id}">${esc(d.title)} — ${esc(d.designer)}</option>`).join('') : '<option value="">No approved designs</option>'}</select></label>
+        <label class="field grow">Customer<input type="text" name="customer" placeholder="Guest" maxlength="60" autocomplete="off"></label>
+        <button class="btn primary" ${approved.length ? '' : 'disabled'}>Record sale</button>
+      </form>
+      <label class="switch" style="margin-top:12px"><input type="checkbox" name="force_fail" form="saleForm"> Demo: force a failure to show the transaction rolling back</label>
+    </div></div>
+    <div class="panel"><div class="ph"><h2>All orders (${s.orders.length})</h2></div>
+      ${table([['#'], ['Design'], ['Customer'], ['Sale', 'num'], ['Payout', 'num'], ['Print'], ['When']], s.orders.map(o => `<tr>
+        <td class="muted">${o.id}</td><td class="t-strong">${esc(o.title)}</td><td>${esc(o.customer)}</td><td class="num">${money(o.sale)}</td>
+        <td class="num">${money(o.payout)}</td><td>${pill(o.job_status)}</td><td class="muted" style="white-space:nowrap">${fmtTime(o.created_at)}</td></tr>`), '<strong>No orders yet</strong>')}
+    </div>`;
+}
+
+function jobsTable() {
+  const s = state, f = tabFilter.print, list = s.jobs.filter(j => f === 'all' || j.status !== 'completed');
+  return table([['Job'], ['Design'], ['Designer'], ['Priority', 'num'], ['Status'], ['Worker']], list.map(j => `<tr>
+    <td class="muted">#${j.id}</td><td class="t-strong">${esc(j.title)}</td><td class="muted">${esc(j.designer)}</td><td class="num">${j.priority}</td><td>${pill(j.status)}</td>
+    <td>${j.status === 'claimed' ? `${esc(j.worker || '')} <span class="muted t-small lease" data-until="${j.lease_until}"></span>` : ''}</td></tr>`), '<strong>Queue is empty</strong>No open print jobs.');
+}
+function pagePrint() {
+  return `<div class="page-head"><div><h1>Print floor</h1><p>Workers claim the next job and print it. If a worker stops, its lease expires and the job returns to the queue.</p></div></div>
+    <div class="panel"><div class="ph"><h2>Workers</h2></div><div class="pad t0">
+      <form class="row" id="queueForm">
+        <label class="field">Worker name<input type="text" name="worker" placeholder="worker-1" maxlength="40" autocomplete="off"></label>
+        <button class="btn primary" data-act="next">Print next job</button>
+        <button class="btn" type="button" data-act="crash">Simulate crash</button>
+        <button class="btn" type="button" data-act="recover">Recover expired</button>
+      </form></div></div>
+    <div class="panel"><div class="ph"><h2>Jobs</h2>${seg('print', [['open', 'Open'], ['all', 'All']])}</div><div id="jobsBox">${jobsTable()}</div></div>`;
+}
+
+function peopleList(list, kind) {
+  return `<ul class="people">${list.map(p => `<li><span class="avatar" style="background:${AV[p.id % AV.length]}">${esc(p.name[0].toUpperCase())}</span><span>${esc(p.name)}</span><span class="id">#${p.id}</span></li>`).join('')}</ul>
+    <form class="add" data-person="${kind}"><input type="text" name="name" placeholder="New ${kind} name" aria-label="New ${kind} name" maxlength="60" autocomplete="off"><button class="btn primary sm">Add</button></form>`;
+}
+function pagePeople() {
+  return `<div class="page-head"><div><h1>People</h1><p>Designer and reviewer accounts.</p></div></div>
+    <div class="split"><div class="panel"><div class="ph"><h2>Designers</h2></div>${peopleList(state.designers, 'designer')}</div>
+    <div class="panel"><div class="ph"><h2>Reviewers</h2></div>${peopleList(state.reviewers, 'reviewer')}</div></div>`;
+}
+const PAGES = {overview: pageOverview, designs: pageDesigns, review: pageReview, orders: pageOrders, print: pagePrint, people: pagePeople};
+
+/* ---------- render ---------- */
+function render() {
+  if (!state) return;
+  const r = route(), pending = state.designs.filter(d => d.status === 'pending').length;
+  $('#nav').innerHTML = TABS.map(([k, l]) => `<a href="#/${k}" ${k === r ? 'aria-current="page"' : ''}>${I[k]}<span>${l}</span>${k === 'review' && pending ? `<span class="badge" aria-label="${pending} pending">${pending}</span>` : ''}</a>`).join('');
+  const keep = {};
+  document.querySelectorAll('#content input[name], #content select[name], #content textarea[data-k]').forEach(el => {
+    if (el.type !== 'checkbox') keep[el.dataset.k || el.name + (el.closest('form')?.id || '')] = el.value;
+  });
+  const checks = {}; document.querySelectorAll('#content input[type=checkbox]').forEach(el => checks[el.name] = el.checked);
+  $('#content').innerHTML = PAGES[r]();
+  document.querySelectorAll('#content input[name], #content select[name], #content textarea[data-k]').forEach(el => {
+    const k = el.dataset.k || el.name + (el.closest('form')?.id || '');
+    if (el.type === 'checkbox') { if (checks[el.name]) el.checked = true; }
+    else if (k in keep && keep[k] !== '' && (el.tagName !== 'SELECT' || [...el.options].some(o => o.value === keep[k]))) el.value = keep[k];
+  });
+  tickLeases();
+}
+function tickLeases() {
+  if (!state) return;
+  document.querySelectorAll('.lease').forEach(el => {
+    const left = +el.dataset.until - nowEst();
+    el.textContent = left > 0 ? `${left}s left` : 'lease expired';
+  });
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+
+function showLogin(msg) {
+  state = null;
+  $('#appView').hidden = true; $('#loginView').hidden = false;
+  const err = $('#loginErr'); if (msg) { err.textContent = msg; err.hidden = false; }
+  setTimeout(() => $('#loginForm').password.focus(), 0);
+}
+async function load() {
+  try {
+    state = await api('/api/admin/state'); state.fetched = Date.now();
+    $('#loginView').hidden = true; $('#appView').hidden = false;
+    render();
+  } catch (e) { if (e.status === 401) showLogin(); else toast(e.message, true); }
+}
+async function act(path, body) {
+  try { const r = await api(path, body); toast(r.message); await load(); return true; }
+  catch (e) { if (e.status === 401) { showLogin('Your session ended. Please sign in again.'); return false; } toast(e.message, true); await load(); return false; }
+}
+
+/* ---------- events ---------- */
+const content = $('#content');
+content.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]'); if (go) { location.hash = '#/' + go.dataset.go; return; }
+  const sg = e.target.closest('[data-seg]'); if (sg) { tabFilter[sg.dataset.seg] = sg.dataset.v; render(); return; }
+  const rv = e.target.closest('[data-review]');
+  if (rv) {
+    if (!reviewerId) return toast('Add a reviewer first on the People page.', true);
+    const note = content.querySelector(`[data-k="note-${rv.dataset.id}"]`)?.value || '';
+    act('/api/admin/review', {design_id: rv.dataset.id, decision: rv.dataset.review, note, reviewer_id: reviewerId});
+    return;
+  }
+  const a = e.target.closest('[data-act]');
+  if (a) {
+    e.preventDefault();
+    const path = {next: '/api/admin/jobs/next', crash: '/api/admin/jobs/crash', recover: '/api/admin/jobs/recover'}[a.dataset.act];
+    act(path, {worker: content.querySelector('#queueForm')?.worker.value || ''});
+  }
+});
+content.addEventListener('change', e => {
+  if (e.target.id === 'reviewerSelect') reviewerId = e.target.value;
+  if (e.target.form?.id === 'designForm' && e.target.name === 'designer_id') designerSel = e.target.value;
+});
+content.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target, fresh = sel => content.querySelector(sel);   // the page re-renders after each action
+  if (f.id === 'designForm') { if (await act('/api/admin/design', {designer_id: f.designer_id.value, title: f.title.value})) fresh('#designForm').title.value = ''; }
+  else if (f.id === 'saleForm') {
+    const fail = content.querySelector('input[name=force_fail]').checked;
+    const ok = await act('/api/admin/sale', {design_id: f.design_id.value, customer: f.customer.value, force_fail: fail});
+    if (ok) fresh('#saleForm').customer.value = '';
+    const c = content.querySelector('input[name=force_fail]'); if (c) c.checked = false;   // the failure demo is one-shot
+  } else if (f.dataset.person) { const k = f.dataset.person; if (await act('/api/admin/' + k, {name: f.name.value})) fresh(`form[data-person="${k}"]`).name.value = ''; }
+});
+
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = $('#loginBtn'), err = $('#loginErr'); btn.disabled = true; err.hidden = true;
+  try { await api('/api/admin/login', {password: e.target.password.value}); e.target.password.value = ''; await load(); }
+  catch (ex) {
+    err.textContent = ex.message; err.hidden = false;
+    const card = $('#loginCard'); card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    e.target.password.select();
+  }
+  btn.disabled = false;
+});
+$('#logout').addEventListener('click', async () => { try { await api('/api/admin/logout', {}); } catch (_) {} location.hash = '#/overview'; showLogin(); });
+
+setInterval(tickLeases, 1000);
+setInterval(() => { if (state && !$('#appView').hidden && document.visibilityState === 'visible' && !document.activeElement.closest('input, textarea, select')) load(); }, 15000);
+
+(async function init() {
+  try { const me = await api('/api/admin/me'); if (me.admin) await load(); else showLogin(); }
+  catch (e) { showLogin(); }
+})();
+</script>
+</body>
+</html>
