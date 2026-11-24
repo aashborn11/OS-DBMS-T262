@@ -60,3 +60,43 @@ img, svg { display: block; max-width: 100%; }
 .t-small { font-size: .8125rem; line-height: 1.4; letter-spacing: -.005em; }
 .t-eyebrow { font-size: .8125rem; font-weight: 600; letter-spacing: .02em; color: var(--ink2); text-transform: none; }
 .muted { color: var(--ink2); }
+
+/* Buttons — feedback is instant on press, settle is a soft ease. */
+.btn { font: 600 .9375rem/1 var(--font); letter-spacing: -.01em; border: 0; border-radius: 980px; min-height: 44px;
+  padding: 0 1.4rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  background: var(--bg2); color: var(--ink); text-decoration: none; white-space: nowrap;
+  transition: transform .1s ease-out, background-color .2s var(--ease), opacity .2s; -webkit-tap-highlight-color: transparent; }
+.btn:hover { text-decoration: none; background: color-mix(in srgb, var(--ink) 9%, var(--bg2)); }
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.ghost { background: transparent; color: var(--link); padding: 0 .6rem; }
+.btn.ghost:hover { background: transparent; text-decoration: underline; }
+.btn.danger { background: var(--bad-bg); color: var(--bad); }
+.btn.ok { background: var(--ok-bg); color: var(--ok); }
+.btn.sm { min-height: 34px; padding: 0 1rem; font-size: .8125rem; }
+.btn.lg { min-height: 52px; padding: 0 1.9rem; font-size: 1.0625rem; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.btn:focus-visible { border-radius: 980px; }
+
+/* Forms */
+label.field { display: grid; gap: .4rem; font-size: .8125rem; font-weight: 500; color: var(--ink2); }
+input[type=text], input[type=password], input[type=number], select, textarea {
+  font: 400 1rem/1.3 var(--font); letter-spacing: -.01em; color: var(--ink); background: var(--card);
+  border: 1px solid var(--line); border-radius: 12px; min-height: 44px; padding: .6rem .9rem; width: 100%;
+  transition: border-color .2s, box-shadow .2s; appearance: none; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .9rem center; padding-right: 2.4rem; }
+textarea { min-height: 84px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+::placeholder { color: color-mix(in srgb, var(--ink2) 80%, transparent); }
+
+/* Status pills */
+.pill { display: inline-flex; align-items: center; gap: .35rem; padding: .18rem .65rem; border-radius: 980px;
+  font-size: .75rem; font-weight: 600; letter-spacing: 0; text-transform: capitalize; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.pending, .pill.claimed { background: var(--warn-bg); color: var(--warn); }
+.pill.approved, .pill.completed { background: var(--ok-bg); color: var(--ok); }
+.pill.rejected { background: var(--bad-bg); color: var(--bad); }
+.pill.queued { background: var(--neutral-bg); color: var(--neutral); }
