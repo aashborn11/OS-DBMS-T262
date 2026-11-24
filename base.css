@@ -24,3 +24,39 @@
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
   color-scheme: light dark;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000; --bg2: #161618; --card: #1c1c1e;
+    --ink: #f5f5f7; --ink2: #a1a1a6; --line: rgba(255, 255, 255, .14);
+    --link: #2997ff;
+    --ok: #5fd486;   --ok-bg: #12301c;
+    --warn: #f5c451; --warn-bg: #3a2d0a;
+    --bad: #ff7a70;  --bad-bg: #3f1613;
+    --neutral: #c7c7cc; --neutral-bg: #2c2c2e;
+    --glass: rgba(0, 0, 0, .72);
+    --scrim: rgba(0, 0, 0, .6);
+    --shadow-s: none; --shadow-m: 0 4px 24px rgba(0, 0, 0, .5);
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.47 var(--font);
+  letter-spacing: -.011em; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { margin: 0; font-family: var(--font-display); font-weight: 700; }
+p { margin: 0; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img, svg { display: block; max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* Type scale — large text tracks tighter, small text opens up. */
+.t-hero  { font-size: clamp(2.75rem, 7.4vw, 5.5rem); line-height: 1.04; letter-spacing: -.035em; font-weight: 700; }
+.t-h1    { font-size: clamp(2.25rem, 5vw, 3.5rem);  line-height: 1.07; letter-spacing: -.03em; }
+.t-h2    { font-size: clamp(1.75rem, 3.6vw, 2.5rem); line-height: 1.1; letter-spacing: -.025em; }
+.t-h3    { font-size: 1.375rem; line-height: 1.2; letter-spacing: -.018em; }
+.t-lead  { font-size: clamp(1.1875rem, 2vw, 1.4375rem); line-height: 1.4; letter-spacing: -.016em; color: var(--ink2); }
+.t-small { font-size: .8125rem; line-height: 1.4; letter-spacing: -.005em; }
+.t-eyebrow { font-size: .8125rem; font-weight: 600; letter-spacing: .02em; color: var(--ink2); text-transform: none; }
+.muted { color: var(--ink2); }
