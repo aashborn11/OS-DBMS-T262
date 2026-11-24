@@ -181,3 +181,47 @@ def review_design(db, body):
             raise ApiError("Review failed. The design status was not changed.")
         raise
     return {"message": f"Design {decision}."}
+
+def record_sale(db, design_id, customer, force_fail=False):
+    """One transaction: order + designer payout + print job. Returns the order id."""
+    db.execute("BEGIN")
+    try:
+        cur = db.execute(
+            "INSERT INTO orders(design_id, customer_name, amount, created_at) "
+            "SELECT ?, ?, ?, unixepoch() FROM designs WHERE id=? AND status='approved'",
+            (design_id, customer, SHIRT_PRICE, design_id))
+        if cur.rowcount == 0:
+            raise ApiError("That design isn't available right now.", 409)
+        order_id = cur.lastrowid
+        db.execute(
+            "INSERT INTO payouts(order_id, designer_id, amount) "
+            "SELECT ?, designer_id, ? * ? FROM designs WHERE id=?",
+            (order_id, SHIRT_PRICE, DESIGNER_SHARE, design_id))
+        db.execute(
+            "INSERT INTO print_jobs(order_id, designer_id, priority, created_at) "
+            "SELECT ?, designer_id, ?, unixepoch() FROM designs WHERE id=?",
+            (order_id, 9 if force_fail else 3, design_id))  # priority 9 breaks the CHECK
+        db.execute("COMMIT")
+    except sqlite3.Error:
+        db.execute("ROLLBACK")
+        raise ApiError("Transaction rolled back; no sale records were saved.", 409)
+    except Exception:
+        db.execute("ROLLBACK")
+        raise
+    return order_id
+
+
+def customer_order(db, body):
+    design_id = need_int(body, "design_id", "design")
+    customer = str(body.get("customer", "")).strip()[:60] or "Guest"
+    order_id = record_sale(db, design_id, customer)       # customers can never force a failure
+    return {"order_id": order_id, "message": f"Order #{order_id} placed."}
+
+
+def admin_sale(db, body):
+    design_id = need_int(body, "design_id", "design")
+    customer = str(body.get("customer", "")).strip()[:60] or "Guest"
+    order_id = record_sale(db, design_id, customer, bool(body.get("force_fail")))
+    payout = SHIRT_PRICE * DESIGNER_SHARE
+    return {"order_id": order_id,
+            "message": f"Order #{order_id} saved: ₹{SHIRT_PRICE:g} sale, ₹{payout:g} payout, print job queued."}
