@@ -72,3 +72,64 @@ CREATE TABLE IF NOT EXISTS designs (
     CONSTRAINT designs_content_present
         CHECK (LENGTH(TRIM(description)) > 0)
 );
+CREATE TABLE IF NOT EXISTS review_history (
+    review_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    design_id BIGINT NOT NULL
+        REFERENCES designs(design_id),
+
+    reviewer_id BIGINT NOT NULL
+        REFERENCES reviewers(reviewer_id),
+
+    decision VARCHAR(20) NOT NULL
+        CHECK (decision IN ('approved', 'rejected')),
+
+    note TEXT NOT NULL,
+
+    reviewed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT review_note_not_blank
+        CHECK (LENGTH(TRIM(note)) > 0)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    order_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    design_id BIGINT NOT NULL
+        REFERENCES designs(design_id),
+
+    customer_name VARCHAR(150) NOT NULL,
+
+    quantity INTEGER NOT NULL,
+
+    unit_price NUMERIC(10,2) NOT NULL,
+
+    total_amount NUMERIC(12,2)
+        GENERATED ALWAYS AS (quantity * unit_price) STORED,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT orders_quantity_positive
+        CHECK (quantity > 0),
+
+    CONSTRAINT orders_price_nonnegative
+        CHECK (unit_price >= 0),
+
+    CONSTRAINT orders_customer_not_blank
+        CHECK (LENGTH(TRIM(customer_name)) > 0)
+);
+CREATE TABLE IF NOT EXISTS designer_payouts (
+    payout_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    order_id BIGINT NOT NULL UNIQUE
+        REFERENCES orders(order_id),
+
+    amount NUMERIC(12,2) NOT NULL,
+
+    status payout_status NOT NULL DEFAULT 'pending',
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT payouts_amount_nonnegative
+        CHECK (amount >= 0)
+);
