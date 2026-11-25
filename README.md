@@ -57,22 +57,20 @@ Designers earn a percentage of each sale. The rate rises as their number of sale
 2. Open `index.html` in a browser. [Change if your steps differ.]
 3. Demo flow: create a design in the studio, submit it, approve it in the Press Room, then find it in the Gallery.
 
-## 9. Screenshots
-[ADD 4–5 screenshots: Gallery, Studio, Press Room, Compensation, Designer profile]
 
-## 10. Limitations
+
+## 9. Limitations
 - This is a college-scale version. Payments and printing are simulated, not connected to real providers.
 - [FILL IN anything else, such as no real login security]
 
-## 11. Future Work
+## 10. Future Work
 The full Guild Press is a separate, larger project with real accounts, a secure admin area, online payments and automatic print-on-demand fulfilment.
 
-## 12. Team Contributions
+## 11. Team Contributions
 | Member | Part |
 |---|---|
-| [Name] | [DBMS part] |
-| [Name] | [OS part] |
-| [Name] | [Frontend / studio] |
+| [BALAJI] | [DBMS part] |
+| [ANUSHKA CHAUDHARY] | [OS part] |
+| [KARMVEER SINGH] | [Frontend / studio] |
 
-## 13. References
-[FILL IN: textbooks, documentation, tutorials used]
+
