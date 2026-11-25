@@ -19,3 +19,12 @@ DO $$ BEGIN
     );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+DO $$ BEGIN
+    CREATE TYPE payout_status AS ENUM (
+        'pending',
+        'paid',
+        'failed'
+    );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
